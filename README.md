@@ -1,16 +1,27 @@
 # 🚀 Windows DevOps Lab
 
-## Java + Jenkins + Nexus Repository + SonarQube + Apache Tomcat
+## Java + Jenkins + Nexus Repository + SonarQube + Trivy + Apache Tomcat
 
-![Jenkins](https://cdn.simpleicons.org/jenkins/D24939)
-![SonarQube](https://cdn.simpleicons.org/sonarqube/4E9BCD) ![Sonatype
-Nexus](https://cdn.simpleicons.org/sonatype/1A1A1A) ![Apache
-Tomcat](https://cdn.simpleicons.org/apachetomcat/F8DC75)
+<div align="center">
 
-![Windows](https://img.shields.io/badge/OS-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Windows
-Services](https://img.shields.io/badge/Services-Windows%20Services-5C2D91?style=for-the-badge)
+<table>
+<tr>
+<td align="center" width="140"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" width="36" height="36" alt="Java"><br><sub><b>Java</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jenkins/jenkins-original.svg" width="36" height="36" alt="Jenkins"><br><sub><b>Jenkins</b></sub></td>
+<td align="center" width="140"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo_of_Sonatype_Nexus_Repository.svg" width="36" height="36" alt="Nexus Repository"><br><sub><b>Nexus</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sonarqube/sonarqube-original.svg" width="36" height="36" alt="SonarQube"><br><sub><b>SonarQube</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/trivy/default.svg" width="36" height="36" alt="Trivy"><br><sub><b>Trivy</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.freebiesupply.com/logos/large/2x/tomcat-logo-black-and-white.png" width="36" height="36" alt="Apache Tomcat"><br><sub><b>Tomcat</b></sub></td>
+</tr>
+</table>
+
+<p>
+<img src="https://img.shields.io/badge/OS-Windows-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
+<img src="https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java 21">
+<img src="https://img.shields.io/badge/Windows%20Services-Enabled-5C2D91?style=flat-square" alt="Windows Services">
+</p>
+
+</div>
 
 ------------------------------------------------------------------------
 
@@ -23,6 +34,7 @@ DevOps lab using:
 -   🔵 Jenkins
 -   🟠 Nexus Repository
 -   🔍 SonarQube
+-   🛡️ Trivy — vulnerability and image scanning
 -   🐱 Apache Tomcat
 
 All application web ports are intentionally moved away from their
@@ -35,75 +47,101 @@ defaults and assigned sequentially from **8050**.
 
 # 🏗️ Architecture
 
-``` mermaid
-flowchart LR
-    G[👨‍💻 Developer / Git] --> J[🔵 Jenkins<br/>CI/CD<br/>:8050]
-    J --> S[🔍 SonarQube<br/>Code Quality<br/>:8052]
-    J --> B[⚙️ Build & Test]
-    B --> N[🟠 Nexus Repository<br/>Artifacts<br/>:8051]
-    N --> T[🐱 Apache Tomcat<br/>Deployment<br/>:8053]
+The recommended pipeline order is:
+
+```text
+Developer / Git
+      │
+      ▼
+🔵 Jenkins :8050
+      │
+      ▼
+Checkout Code
+      │
+      ▼
+Build & Unit Test
+      │
+      ├──────────────► 🔍 SonarQube :8052
+      │                 Code Quality / Quality Gate
+      │
+      ├──────────────► 🛡️ Trivy
+      │                 Vulnerability / Security Scan
+      │
+      ▼
+Quality & Security Gates
+      │
+      ▼
+Package Application
+      │
+      ▼
+🟠 Nexus Repository :8051
+      │
+      │  Store Versioned Artifact
+      ▼
+🐱 Apache Tomcat :8053
+      │
+      ▼
+🚀 Application Deployed
 ```
 
-### CI/CD Flow
+### 🔄 CI/CD Flow
 
-``` text
-Developer
-   │
-   ▼
-  Git
-   │
-   ▼
-Jenkins :8050
-   │
-   ├──────────────► SonarQube :8052
-   │                    │
-   │                    └── Code Quality
-   │
-   ├──────────────► Build / Test
-   │
-   └──────────────► Nexus :8051
-                         │
-                         └── Store Artifact
-                                  │
-                                  ▼
-                           Tomcat :8053
-                                  │
-                                  └── Deploy Application
+```text
+1. Git Push
+      ↓
+2. Jenkins :8050
+      ↓
+3. Checkout
+      ↓
+4. Build
+      ↓
+5. Unit Test
+      ↓
+6. SonarQube :8052
+      └── Code Quality / Quality Gate
+      ↓
+7. Trivy
+      └── Vulnerability / Security Scan
+      ↓
+8. Quality / Security Gates
+      ↓
+9. Package WAR/JAR
+      ↓
+10. Nexus Repository :8051
+      └── Store Versioned Artifact
+      ↓
+11. Apache Tomcat :8053
+      └── Deploy Application
+      ↓
+12. Application Running
 ```
 
-------------------------------------------------------------------------
+> **Important:** SonarQube and Trivy are analysis/scanning tools invoked by Jenkins. They are not normally placed in the application traffic path. Nexus stores the approved versioned artifact, and Tomcat deploys that artifact.
 
 # 📦 Software
 
-  -----------------------------------------------------------------------------------------------
-  Component    File                               Purpose           Default Port         Lab Port
-  ------------ ---------------------------------- ------------- ---------------- ----------------
-  ☕ Java      JDK                                Runtime                    ---              ---
+| Component | File / Package | Purpose | Default Port | Lab Port |
+|---|---|---|---:|---:|
+| ☕ Java | JDK | Runtime | — | — |
+| 🔵 Jenkins | `jenkins.msi` | CI/CD Automation | `8080` | **8050** |
+| 🟠 Nexus | `nexus-3.85.0-03-win-x86_64.zip` | Artifact Repository | `8081` | **8051** |
+| 🔍 SonarQube | `sonarqube-25.11.0.114957.zip` | Code Quality | `9000` | **8052** |
+| 🛡️ Trivy | Windows 64-bit ZIP | Vulnerability / Security Scanning | **CLI** | **No Web Port** |
+| 🐱 Tomcat | `apache-tomcat-9.0.111.exe` | Application Server | `8080` | **8053** |
 
-  🔵 Jenkins   `jenkins.msi`                      CI/CD                   `8080`         **8050**
-                                                  Automation                     
-
-  🟠 Nexus     `nexus-3.85.0-03-win-x86_64.zip`   Artifact                `8081`         **8051**
-                                                  Repository                     
-
-  🔍 SonarQube `sonarqube-25.11.0.114957.zip`     Code Quality            `9000`         **8052**
-
-  🐱 Tomcat    `apache-tomcat-9.0.111.exe`        Application             `8080`         **8053**
-                                                  Server                         
-  -----------------------------------------------------------------------------------------------
-
-> **Port plan:** `8050 → 8051 → 8052 → 8053`
+> **Port plan:** `8050 → 8051 → 8052 → 8053`  
+> **Trivy is a command-line security scanner, not a web application, so it does not require a web port.**
 
 ### Default vs Lab Ports
 
-  Tool          Default        Lab
-  ----------- --------- ----------
-  Jenkins        `8080`   **8050**
-  Nexus          `8081`   **8051**
-  SonarQube      `9000`   **8052**
-  Tomcat         `8080`   **8053**
+| Tool | Default Port | Lab Port |
+|---|---:|---:|
+| Jenkins | `8080` | **8050** |
+| Nexus | `8081` | **8051** |
+| SonarQube | `9000` | **8052** |
+| Trivy | CLI | **No Web Port** |
+| Tomcat | `8080` | **8053** |
 
-------------------------------------------------------------------------
 
 # 📁 Recommended Directory Structure
 
@@ -210,7 +248,173 @@ javac -version
 
 ------------------------------------------------------------------------
 
-# 2️⃣ Install Nexus Repository
+# 2️⃣ Install Trivy
+
+### Purpose
+
+**Trivy** is a vulnerability scanner that can scan:
+
+- 🐳 Container images
+- 📦 Filesystems
+- 📁 Source code repositories
+- ☸️ Kubernetes configurations
+- 🔐 Dependencies and packages
+
+Trivy is a **CLI tool**, not a Windows web service, so it does not require a port.
+
+The official Windows installation method is to download the `trivy_x.xx.x_windows-64bit.zip` release, extract it, and add the directory containing `trivy.exe` to `PATH`.
+
+## Step 1 — Download Trivy
+
+Download the latest Windows 64-bit ZIP from the official Trivy releases.
+
+Expected file:
+
+```text
+trivy_x.xx.x_windows-64bit.zip
+```
+
+Extract to:
+
+```text
+C:\DevOps\Trivy
+```
+
+Expected:
+
+```text
+C:\DevOps\Trivy\
+└── trivy.exe
+```
+
+## Step 2 — Add Trivy to PATH
+
+Open:
+
+```text
+System Properties
+  → Advanced
+  → Environment Variables
+```
+
+Edit the **System `Path`** and add:
+
+```text
+C:\DevOps\Trivy
+```
+
+Close and reopen Command Prompt.
+
+Verify:
+
+```cmd
+trivy --version
+```
+
+You should see the installed Trivy version.
+
+## Step 3 — Update Vulnerability Database
+
+Run:
+
+```cmd
+trivy image --download-db-only
+```
+
+Trivy maintains a local vulnerability database that is used during scans.
+
+## Step 4 — Scan a Container Image
+
+If Docker Desktop is installed and running:
+
+```cmd
+docker pull nginx:latest
+```
+
+Scan the image:
+
+```cmd
+trivy image nginx:latest
+```
+
+For a CI/CD-friendly scan:
+
+```cmd
+trivy image --severity HIGH,CRITICAL nginx:latest
+```
+
+Fail the command when HIGH or CRITICAL vulnerabilities are found:
+
+```cmd
+trivy image --severity HIGH,CRITICAL --exit-code 1 nginx:latest
+```
+
+## Step 5 — Scan a Local Project
+
+From the project directory:
+
+```cmd
+trivy fs .
+```
+
+Only scan HIGH and CRITICAL vulnerabilities:
+
+```cmd
+trivy fs --severity HIGH,CRITICAL .
+```
+
+## Step 6 — Generate JSON Report
+
+```cmd
+trivy image --format json -o trivy-report.json nginx:latest
+```
+
+The report will be created as:
+
+```text
+trivy-report.json
+```
+
+## Step 7 — Jenkins Integration
+
+A typical Jenkins flow is:
+
+```text
+Jenkins :8050
+     │
+     ├── Checkout
+     │
+     ├── Build
+     │
+     ├── Trivy Security Scan
+     │       │
+     │       ├── HIGH
+     │       └── CRITICAL
+     │
+     ├── SonarQube :8052
+     │
+     ├── Unit Tests
+     │
+     ├── Publish Artifact
+     │       │
+     │       ▼
+     │    Nexus :8051
+     │
+     └── Deploy
+             │
+             ▼
+          Tomcat :8053
+```
+
+Example Jenkins Windows batch step:
+
+```cmd
+trivy image --severity HIGH,CRITICAL --exit-code 1 %IMAGE_NAME%:%IMAGE_TAG%
+```
+
+> Trivy does not need a Windows service or a dedicated HTTP port.
+
+# 3️⃣ Install Nexus Repository
 
 ### File
 
@@ -351,7 +555,7 @@ Change the password during initial setup.
 
 ------------------------------------------------------------------------
 
-# 3️⃣ Install SonarQube
+# 4️⃣ Install SonarQube
 
 ### File
 
@@ -475,7 +679,7 @@ es.log
 
 ------------------------------------------------------------------------
 
-# 4️⃣ Install Jenkins
+# 5️⃣ Install Jenkins
 
 ### File
 
@@ -579,7 +783,7 @@ If you selected another installation directory, check:
 
 ------------------------------------------------------------------------
 
-# 5️⃣ Install Apache Tomcat 9
+# 6️⃣ Install Apache Tomcat 9
 
 ### File
 
@@ -678,7 +882,7 @@ http://localhost:8053
 
 ------------------------------------------------------------------------
 
-# 6️⃣ Final Port Map
+# 7️⃣ Final Port Map
 
 ``` text
 ┌──────────────────────────────────────────────┐
@@ -695,7 +899,7 @@ http://localhost:8053
 
 ------------------------------------------------------------------------
 
-# 7️⃣ Verify All Ports
+# 8️⃣ Verify All Ports
 
 Open **Administrator CMD**:
 
@@ -717,7 +921,7 @@ Expected:
 
 ------------------------------------------------------------------------
 
-# 8️⃣ Verify All Windows Services
+# 9️⃣ Verify All Windows Services
 
 Open:
 
@@ -742,7 +946,7 @@ Startup Type = Automatic
 
 ------------------------------------------------------------------------
 
-# 9️⃣ Service Management
+# 🔟 Service Management
 
 ## Jenkins
 
@@ -775,7 +979,7 @@ net start Tomcat9
 
 ------------------------------------------------------------------------
 
-# 🔟 Troubleshooting
+# 1️⃣1️⃣ Troubleshooting
 
 ## Check Java
 
@@ -832,33 +1036,102 @@ service fails to start.
 
 ------------------------------------------------------------------------
 
-# 1️⃣1️⃣ CI/CD Flow
+# 1️⃣2️⃣ CI/CD Flow
 
-``` mermaid
-sequenceDiagram
-    participant D as 👨‍💻 Developer
-    participant G as Git
-    participant J as 🔵 Jenkins :8050
-    participant S as 🔍 SonarQube :8052
-    participant N as 🟠 Nexus :8051
-    participant T as 🐱 Tomcat :8053
+The CI/CD pipeline is orchestrated by Jenkins. SonarQube and Trivy perform quality and security checks before the artifact is published to Nexus.
 
-    D->>G: Push Code
-    G->>J: Trigger Pipeline
-    J->>S: Code Analysis
-    S-->>J: Quality Gate
-    J->>J: Build & Test
-    J->>N: Publish Artifact
-    N-->>J: Artifact Stored
-    J->>T: Deploy Application
-    T-->>J: Deployment Result
+```text
+Developer / Git
+      │
+      ▼
+🔵 Jenkins :8050
+      │
+      ▼
+1. Checkout Code
+      │
+      ▼
+2. Build
+      │
+      ▼
+3. Unit Test
+      │
+      ▼
+4. 🔍 SonarQube :8052
+      │
+      └── Code Quality / Quality Gate
+      │
+      ▼
+5. 🛡️ Trivy
+      │
+      └── Vulnerability / Security Scan
+      │
+      ▼
+6. Quality & Security Gates
+      │
+      ▼
+7. Package WAR/JAR
+      │
+      ▼
+8. 🟠 Nexus Repository :8051
+      │
+      └── Store Versioned Artifact
+      │
+      ▼
+9. 🐱 Apache Tomcat :8053
+      │
+      └── Deploy Application
+      │
+      ▼
+🚀 Application Running
 ```
 
-------------------------------------------------------------------------
+### 🛡️ Where Trivy Fits
 
-# 1️⃣2️⃣ Example Maven Application Flow
+For this Windows DevOps lab, Trivy is a **CLI tool invoked by Jenkins**. It is not a Windows web service and does not have a port.
 
-``` text
+For a Java application, Jenkins can use Trivy to scan the workspace, dependencies, filesystem, or a generated container image.
+
+```text
+Build Application
+      │
+      ▼
+SonarQube
+      │
+      ▼
+Trivy
+      │
+      ├── Filesystem / Dependency Scan
+      │
+      └── Container Image Scan (if Docker is used)
+      │
+      ▼
+Security Gate
+      │
+      ▼
+Publish Approved Artifact
+```
+
+### 🐳 Container Image Scan
+
+If the pipeline also builds a Docker image:
+
+```text
+Build Application
+      │
+      ▼
+Docker Build
+      │
+      ▼
+🛡️ Trivy Image Scan
+      │
+      ├── PASS ──► Push Image
+      │
+      └── FAIL ──► Stop Pipeline
+```
+
+### 📦 Maven Application Flow
+
+```text
 Git
  │
  ▼
@@ -871,124 +1144,157 @@ Jenkins :8050
  ├── Unit Test
  │
  ├── SonarQube :8052
- │       │
- │       └── Quality Gate
+ │       └── Code Quality / Quality Gate
+ │
+ ├── Trivy
+ │       └── Vulnerability / Security Scan
  │
  ├── Package
- │       │
  │       └── application.war
  │
- ├── Upload
- │       │
- │       ▼
- │    Nexus :8051
+ ├── Nexus :8051
+ │       └── Store Versioned Artifact
  │
- └── Deploy
-         │
-         ▼
-      Tomcat :8053
+ └── Tomcat :8053
+         └── Deploy Application
 ```
 
-------------------------------------------------------------------------
+> **Important:** SonarQube and Trivy are analysis/scanning tools invoked by Jenkins. They are not placed in the application's runtime traffic path. Nexus stores the approved versioned artifact, and Tomcat deploys that artifact.
 
-# 1️⃣3️⃣ Installation Checklist
+# 1️⃣4️⃣ Installation Checklist
 
 ## ☕ Java
 
--   [ ] Install JDK
--   [ ] Configure `JAVA_HOME`
--   [ ] Add `%JAVA_HOME%\bin` to `PATH`
--   [ ] Verify `java -version`
--   [ ] Verify `javac -version`
-
-## 🟠 Nexus
-
--   [ ] Extract Nexus ZIP
--   [ ] Install `SonatypeNexusRepository`
--   [ ] Configure port `8051`
--   [ ] Start service
--   [ ] Set startup type to Automatic
--   [ ] Verify `http://localhost:8051`
--   [ ] Retrieve `admin.password`
--   [ ] Change admin password
-
-## 🔍 SonarQube
-
--   [ ] Extract SonarQube ZIP
--   [ ] Configure `sonar.web.port=8052`
--   [ ] Install `SonarQube` service
--   [ ] Start service
--   [ ] Set startup type to Automatic
--   [ ] Verify `http://localhost:8052`
+- [ ] Install JDK
+- [ ] Configure `JAVA_HOME`
+- [ ] Add `%JAVA_HOME%\bin` to `PATH`
+- [ ] Verify `java -version`
+- [ ] Verify `javac -version`
 
 ## 🔵 Jenkins
 
--   [ ] Run `jenkins.msi`
--   [ ] Select supported JDK
--   [ ] Configure port `8050`
--   [ ] Install Jenkins service
--   [ ] Set startup type to Automatic
--   [ ] Verify `http://localhost:8050`
--   [ ] Complete initial setup
+- [ ] Run `jenkins.msi`
+- [ ] Select supported JDK
+- [ ] Configure port `8050`
+- [ ] Install Jenkins service
+- [ ] Set startup type to Automatic
+- [ ] Verify `http://localhost:8050`
+- [ ] Complete initial setup
+
+## 🟠 Nexus
+
+- [ ] Extract Nexus ZIP
+- [ ] Install `SonatypeNexusRepository`
+- [ ] Configure port `8051`
+- [ ] Start service
+- [ ] Set startup type to Automatic
+- [ ] Verify `http://localhost:8051`
+- [ ] Retrieve `admin.password`
+- [ ] Change admin password
+
+## 🔍 SonarQube
+
+- [ ] Extract SonarQube ZIP
+- [ ] Configure `sonar.web.port=8052`
+- [ ] Install `SonarQube` service
+- [ ] Start service
+- [ ] Set startup type to Automatic
+- [ ] Verify `http://localhost:8052`
+
+## 🛡️ Trivy
+
+- [ ] Download the Windows 64-bit Trivy ZIP
+- [ ] Extract to `C:\DevOps\Trivy`
+- [ ] Add `C:\DevOps\Trivy` to `PATH`
+- [ ] Verify `trivy --version`
+- [ ] Run/update the Trivy vulnerability database
+- [ ] Test a filesystem/dependency scan
+- [ ] Test a container image scan if Docker is used
+- [ ] Configure HIGH/CRITICAL vulnerability handling
+- [ ] Integrate Trivy into Jenkins
+- [ ] Generate JSON/SARIF/HTML reports if required
+- [ ] **Do not configure a web port — Trivy is a CLI tool**
 
 ## 🐱 Tomcat
 
--   [ ] Run Tomcat installer
--   [ ] Enable Windows service
--   [ ] Configure HTTP port `8053`
--   [ ] Start `Tomcat9`
--   [ ] Set startup type to Automatic
--   [ ] Verify `http://localhost:8053`
-
-------------------------------------------------------------------------
+- [ ] Run Tomcat installer
+- [ ] Enable Windows service
+- [ ] Configure HTTP port `8053`
+- [ ] Start `Tomcat9`
+- [ ] Set startup type to Automatic
+- [ ] Verify `http://localhost:8053`
 
 # 🎉 Final Environment
 
-``` text
-                         WINDOWS
-                            │
-             ┌──────────────┼──────────────┐
-             │              │              │
-             ▼              ▼              ▼
-        🔵 Jenkins      🟠 Nexus       🔍 SonarQube
-          :8050           :8051            :8052
-             │              │
-             │              │
-             └───────┬──────┘
-                     │
-                     ▼
-              🐱 Apache Tomcat
-                    :8053
+```text
+                         WINDOWS DEVOPS LAB
+                                │
+                                ▼
+                         🔵 Jenkins :8050
+                                │
+                                ▼
+                         Build / Unit Test
+                                │
+                ┌───────────────┴───────────────┐
+                │                               │
+                ▼                               ▼
+        🔍 SonarQube :8052                🛡️ Trivy (CLI)
+        Code Quality                      Security Scan
+                │                               │
+                └───────────────┬───────────────┘
+                                │
+                                ▼
+                       Quality / Security Gates
+                                │
+                                ▼
+                       📦 Package WAR/JAR
+                                │
+                                ▼
+                       🟠 Nexus Repository :8051
+                                │
+                                ▼
+                       🐱 Apache Tomcat :8053
+                                │
+                                ▼
+                       🚀 Application Deployed
 ```
 
 ## 🌐 Access URLs
 
-  Tool           URL
-  -------------- -------------------------
-  🔵 Jenkins     `http://localhost:8050`
-  🟠 Nexus       `http://localhost:8051`
-  🔍 SonarQube   `http://localhost:8052`
-  🐱 Tomcat      `http://localhost:8053`
-
-------------------------------------------------------------------------
+| Tool | URL / Access |
+|---|---|
+| 🔵 Jenkins | `http://localhost:8050` |
+| 🟠 Nexus | `http://localhost:8051` |
+| 🔍 SonarQube | `http://localhost:8052` |
+| 🛡️ Trivy | **CLI — No Web Port** |
+| 🐱 Tomcat | `http://localhost:8053` |
 
 # 📚 Official Documentation
 
--   Jenkins Windows Installation:
-    https://www.jenkins.io/doc/book/installing/windows/
--   Jenkins Port Configuration:
-    https://www.jenkins.io/doc/book/installing/initial-settings/
--   Nexus Installation:
-    https://help.sonatype.com/en/install-nexus-repository.html
--   Nexus Windows Service:
-    https://help.sonatype.com/en/run-as-a-service.html
--   SonarQube Windows Service:
-    https://docs.sonarsource.com/sonarqube-server/10.8/setup-and-upgrade/operating-the-server
--   Apache Tomcat Windows Service:
-    https://tomcat.apache.org/tomcat-9.0-doc/windows-service-howto.html
+| Component | Official Documentation |
+|---|---|
+| ☕ Java / OpenJDK | https://openjdk.org/ |
+| 🔵 Jenkins — Windows Installation | https://www.jenkins.io/doc/book/installing/windows/ |
+| 🔵 Jenkins — Initial Configuration / Port | https://www.jenkins.io/doc/book/installing/initial-settings/ |
+| 🟠 Nexus Repository — Installation | https://help.sonatype.com/en/install-nexus-repository.html |
+| 🟠 Nexus Repository — Windows Service | https://help.sonatype.com/en/run-as-a-service.html |
+| 🔍 SonarQube — Server Installation | https://docs.sonarsource.com/sonarqube-server/server-installation/ |
+| 🔍 SonarQube — Windows Service | https://docs.sonarsource.com/sonarqube-server/server-installation/from-zip-file/starting-stopping-server/running-as-a-service |
+| 🛡️ Trivy — Installation | https://trivy.dev/docs/latest/getting-started/installation/ |
+| 🛡️ Trivy — Getting Started | https://trivy.dev/docs/latest/getting-started/ |
+| 🐱 Apache Tomcat 9 — Windows Service | https://tomcat.apache.org/tomcat-9.0-doc/windows-service-howto.html |
 
-------------------------------------------------------------------------
 
 ## 🚀 Windows DevOps Lab
 
-**Jenkins → SonarQube → Nexus → Tomcat**
+**Jenkins → Build/Test → SonarQube → Trivy → Nexus → Tomcat**
+
+---
+
+<div align="center">
+
+### Sreekanth K
+
+**Lead DevSecOps and Site Reliability Engineer**
+
+</div>
