@@ -246,6 +246,60 @@ java -version
 javac -version
 ```
 
+## Uninstall Java JDK
+
+### Step 1 --- Remove JDK
+
+Open:
+
+``` text
+Control Panel
+  → Programs
+  → Programs and Features
+```
+
+Select the installed JDK and click:
+
+``` text
+Uninstall
+```
+
+### Step 2 --- Remove JAVA_HOME
+
+Open:
+
+``` text
+System Properties
+  → Advanced
+  → Environment Variables
+```
+
+Under **System variables**, delete:
+
+``` text
+JAVA_HOME
+```
+
+### Step 3 --- Remove from PATH
+
+Edit the system `Path` and remove the entry:
+
+``` text
+%JAVA_HOME%\bin
+```
+
+Close and reopen Command Prompt.
+
+Verify removal:
+
+``` cmd
+java -version
+```
+
+``` text
+'java' is not recognized as an internal or external command
+```
+
 ------------------------------------------------------------------------
 
 # 2️⃣ Install Trivy
@@ -414,6 +468,52 @@ trivy image --severity HIGH,CRITICAL --exit-code 1 %IMAGE_NAME%:%IMAGE_TAG%
 
 > Trivy does not need a Windows service or a dedicated HTTP port.
 
+## Uninstall Trivy
+
+Trivy is a standalone CLI tool with no installer and no Windows service, so removal is manual.
+
+### Step 1 — Remove Trivy from PATH
+
+Open:
+
+```text
+System Properties
+  → Advanced
+  → Environment Variables
+```
+
+Edit the **System `Path`** and remove:
+
+```text
+C:\DevOps\Trivy
+```
+
+Close and reopen Command Prompt.
+
+### Step 2 — Delete the Trivy Directory
+
+```cmd
+rmdir /s /q C:\DevOps\Trivy
+```
+
+### Step 3 — Remove the Vulnerability Database Cache (optional)
+
+Trivy caches its vulnerability database under the user profile:
+
+```cmd
+rmdir /s /q %USERPROFILE%\.cache\trivy
+```
+
+Verify removal:
+
+```cmd
+trivy --version
+```
+
+```text
+'trivy' is not recognized as an internal or external command
+```
+
 # 3️⃣ Install Nexus Repository
 
 ### File
@@ -553,6 +653,48 @@ Password: <value from admin.password>
 
 Change the password during initial setup.
 
+## Uninstall Nexus Repository
+
+### Step 1 --- Stop Nexus
+
+``` cmd
+nexus.exe stop SonatypeNexusRepository
+```
+
+### Step 2 --- Uninstall Windows Service
+
+Open **Administrator CMD**:
+
+``` cmd
+cd C:\DevOps\Nexus\nexus-3.85.0-03\bin
+```
+
+Run:
+
+``` cmd
+uninstall-nexus-service.bat
+```
+
+This removes the `SonatypeNexusRepository` service. Confirm it is gone:
+
+``` cmd
+sc query SonatypeNexusRepository
+```
+
+### Step 3 --- Delete Nexus Files
+
+``` cmd
+rmdir /s /q C:\DevOps\Nexus
+```
+
+> This also deletes the `sonatype-work` data directory, including repositories, blob stores, and configuration. Back up anything needed before deleting.
+
+Verify removal:
+
+``` cmd
+netstat -ano | findstr ":8051"
+```
+
 ------------------------------------------------------------------------
 
 # 4️⃣ Install SonarQube
@@ -677,6 +819,41 @@ ce.log
 es.log
 ```
 
+## Uninstall SonarQube
+
+### Step 1 --- Stop SonarQube
+
+``` cmd
+cd C:\DevOps\SonarQube\sonarqube-25.11.0.114957\bin\windows-x86-64
+SonarService.bat stop
+```
+
+### Step 2 --- Uninstall Windows Service
+
+``` cmd
+SonarService.bat uninstall
+```
+
+Confirm the service is gone:
+
+``` cmd
+sc query SonarQube
+```
+
+### Step 3 --- Delete SonarQube Files
+
+``` cmd
+rmdir /s /q C:\DevOps\SonarQube
+```
+
+> This deletes the SonarQube data directory, including the embedded database, plugins, and logs. Back up anything needed before deleting.
+
+Verify removal:
+
+``` cmd
+netstat -ano | findstr ":8052"
+```
+
 ------------------------------------------------------------------------
 
 # 5️⃣ Install Jenkins
@@ -781,6 +958,59 @@ If you selected another installation directory, check:
 <jenkins-installation-directory>\secrets\initialAdminPassword
 ```
 
+## Uninstall Jenkins
+
+### Step 1 --- Stop the Jenkins Service
+
+``` cmd
+net stop Jenkins
+```
+
+### Step 2 --- Uninstall via Control Panel
+
+Open:
+
+``` text
+Control Panel
+  → Programs
+  → Programs and Features
+```
+
+Select:
+
+``` text
+Jenkins
+```
+
+Click:
+
+``` text
+Uninstall
+```
+
+Alternatively, from an Administrator CMD:
+
+``` cmd
+wmic product where "name='Jenkins'" call uninstall
+```
+
+### Step 3 --- Remove Leftover Files
+
+If any files remain after uninstall (default install path):
+
+``` cmd
+rmdir /s /q "C:\Program Files\Jenkins"
+```
+
+> This deletes the Jenkins home directory, including jobs, build history, plugins, and configuration. Back up `JENKINS_HOME` first if needed.
+
+### Step 4 --- Verify Removal
+
+``` cmd
+sc query Jenkins
+netstat -ano | findstr ":8050"
+```
+
 ------------------------------------------------------------------------
 
 # 6️⃣ Install Apache Tomcat 9
@@ -878,6 +1108,53 @@ Open:
 
 ``` text
 http://localhost:8053
+```
+
+## Uninstall Apache Tomcat 9
+
+### Step 1 --- Stop the Tomcat Service
+
+``` cmd
+net stop Tomcat9
+```
+
+### Step 2 --- Run the Uninstaller
+
+Tomcat's Windows installer creates an uninstaller alongside the installation. From the Tomcat installation directory:
+
+``` cmd
+Uninstall.exe
+```
+
+Or via Control Panel:
+
+``` text
+Control Panel
+  → Programs
+  → Programs and Features
+  → Apache Tomcat 9.0 Tomcat9
+  → Uninstall
+```
+
+### Step 3 --- Remove the Windows Service (if it remains)
+
+``` cmd
+sc delete Tomcat9
+```
+
+### Step 4 --- Delete Leftover Files
+
+``` cmd
+rmdir /s /q C:\DevOps\Tomcat
+```
+
+> This deletes deployed applications under `webapps`, along with logs and configuration. Back up anything needed before deleting.
+
+### Step 5 --- Verify Removal
+
+``` cmd
+sc query Tomcat9
+netstat -ano | findstr ":8053"
 ```
 
 ------------------------------------------------------------------------
