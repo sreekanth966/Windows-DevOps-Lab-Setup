@@ -302,7 +302,652 @@ java -version
 
 ------------------------------------------------------------------------
 
-# 2️⃣ Install Trivy
+# 2️⃣ Install Nexus Repository
+
+### File
+
+``` text
+nexus-3.85.0-03-win-x86_64.zip
+```
+
+## Step 1 --- Extract
+
+Extract to:
+
+``` text
+C:\DevOps\Nexus
+```
+
+Expected:
+
+``` text
+C:\DevOps\Nexus\
+└── nexus-3.85.0-03\
+```
+
+Nexus will use a `sonatype-work` data directory.
+
+## Step 2 --- Install Windows Service
+
+Open **Administrator CMD**:
+
+``` cmd
+cd C:\DevOps\Nexus\nexus-3.85.0-03\bin
+```
+
+Run:
+
+``` cmd
+install-nexus-service.bat
+```
+
+This installs:
+
+``` text
+SonatypeNexusRepository
+```
+
+## Step 3 --- Start Nexus
+
+``` cmd
+nexus.exe start SonatypeNexusRepository
+```
+
+Or open:
+
+``` cmd
+services.msc
+```
+
+Find:
+
+``` text
+Sonatype Nexus Repository
+```
+
+Set:
+
+``` text
+Startup type = Automatic
+```
+
+## Step 4 --- Configure Nexus Port
+
+Nexus default HTTP port:
+
+``` text
+8081
+```
+
+Lab port:
+
+``` text
+8051
+```
+
+Open:
+
+``` text
+C:\DevOps\Nexus\sonatype-work\nexus3\etc\nexus.properties
+```
+
+Set:
+
+``` properties
+application-port=8051
+```
+
+If the property does not exist, add it.
+
+Restart:
+
+``` cmd
+nexus.exe stop SonatypeNexusRepository
+nexus.exe start SonatypeNexusRepository
+```
+
+Verify:
+
+``` cmd
+netstat -ano | findstr ":8051"
+```
+
+Open:
+
+``` text
+http://localhost:8051
+```
+
+## Step 5 --- Get Initial Admin Password
+
+Nexus stores the initial password here:
+
+``` text
+sonatype-work\nexus3\admin.password
+```
+
+Example:
+
+``` cmd
+type C:\DevOps\Nexus\sonatype-work\nexus3\admin.password
+```
+
+Login:
+
+``` text
+Username: admin
+Password: <value from admin.password>
+```
+
+Change the password during initial setup.
+
+## Uninstall Nexus Repository
+
+### Step 1 --- Stop Nexus
+
+``` cmd
+nexus.exe stop SonatypeNexusRepository
+```
+
+### Step 2 --- Uninstall Windows Service
+
+Open **Administrator CMD**:
+
+``` cmd
+cd C:\DevOps\Nexus\nexus-3.85.0-03\bin
+```
+
+Run:
+
+``` cmd
+uninstall-nexus-service.bat
+```
+
+This removes the `SonatypeNexusRepository` service. Confirm it is gone:
+
+``` cmd
+sc query SonatypeNexusRepository
+```
+
+### Step 3 --- Delete Nexus Files
+
+``` cmd
+rmdir /s /q C:\DevOps\Nexus
+```
+
+> This also deletes the `sonatype-work` data directory, including repositories, blob stores, and configuration. Back up anything needed before deleting.
+
+Verify removal:
+
+``` cmd
+netstat -ano | findstr ":8051"
+```
+
+------------------------------------------------------------------------
+
+# 3️⃣ Install SonarQube
+
+### File
+
+``` text
+sonarqube-25.11.0.114957.zip
+```
+
+## Step 1 --- Extract
+
+Extract to:
+
+``` text
+C:\DevOps\SonarQube
+```
+
+Expected:
+
+``` text
+C:\DevOps\SonarQube\
+└── sonarqube-25.11.0.114957\
+```
+
+## Step 2 --- Configure SonarQube Port
+
+SonarQube default web port:
+
+``` text
+9000
+```
+
+Lab port:
+
+``` text
+8052
+```
+
+Open:
+
+``` text
+C:\DevOps\SonarQube\sonarqube-25.11.0.114957\conf\sonar.properties
+```
+
+Add or uncomment:
+
+``` properties
+sonar.web.port=8052
+```
+
+Save the file.
+
+## Step 3 --- Install Windows Service
+
+Open **Administrator CMD**:
+
+``` cmd
+cd C:\DevOps\SonarQube\sonarqube-25.11.0.114957\bin\windows-x86-64
+```
+
+Install:
+
+``` cmd
+SonarService.bat install
+```
+
+## Step 4 --- Start SonarQube
+
+``` cmd
+SonarService.bat start
+```
+
+Check status:
+
+``` cmd
+SonarService.bat status
+```
+
+Or:
+
+``` text
+services.msc
+```
+
+Find:
+
+``` text
+SonarQube
+```
+
+Set:
+
+``` text
+Startup type = Automatic
+```
+
+## Step 5 --- Verify
+
+``` cmd
+netstat -ano | findstr ":8052"
+```
+
+Open:
+
+``` text
+http://localhost:8052
+```
+
+### SonarQube Logs
+
+``` text
+C:\DevOps\SonarQube\sonarqube-25.11.0.114957\logs\
+```
+
+Important:
+
+``` text
+sonar.log
+web.log
+ce.log
+es.log
+```
+
+## Uninstall SonarQube
+
+### Step 1 --- Stop SonarQube
+
+``` cmd
+cd C:\DevOps\SonarQube\sonarqube-25.11.0.114957\bin\windows-x86-64
+SonarService.bat stop
+```
+
+### Step 2 --- Uninstall Windows Service
+
+``` cmd
+SonarService.bat uninstall
+```
+
+Confirm the service is gone:
+
+``` cmd
+sc query SonarQube
+```
+
+### Step 3 --- Delete SonarQube Files
+
+``` cmd
+rmdir /s /q C:\DevOps\SonarQube
+```
+
+> This deletes the SonarQube data directory, including the embedded database, plugins, and logs. Back up anything needed before deleting.
+
+Verify removal:
+
+``` cmd
+netstat -ano | findstr ":8052"
+```
+
+------------------------------------------------------------------------
+
+# 4️⃣ Install Jenkins
+
+### File
+
+``` text
+jenkins.msi
+```
+
+## Step 1 --- Run MSI
+
+Right-click:
+
+``` text
+jenkins.msi
+```
+
+Select:
+
+``` text
+Run as administrator
+```
+
+The Jenkins Windows MSI installs Jenkins as a Windows service.
+
+## Step 2 --- Select Java
+
+When prompted for Java, select your supported JDK.
+
+Example:
+
+``` text
+C:\Program Files\Java\jdk-21
+```
+
+## Step 3 --- Configure Jenkins Port
+
+Jenkins default HTTP port:
+
+``` text
+8080
+```
+
+Lab port:
+
+``` text
+8050
+```
+
+During the MSI installation, set:
+
+``` text
+Port = 8050
+```
+
+The installer validates that the selected port is available.
+
+## Step 4 --- Verify Jenkins Service
+
+Open:
+
+``` cmd
+services.msc
+```
+
+Find:
+
+``` text
+Jenkins
+```
+
+Set:
+
+``` text
+Startup type = Automatic
+```
+
+## Step 5 --- Verify Port
+
+``` cmd
+netstat -ano | findstr ":8050"
+```
+
+Open:
+
+``` text
+http://localhost:8050
+```
+
+## Step 6 --- Get Initial Admin Password
+
+For the default Jenkins installation location, check:
+
+``` text
+C:\Program Files\Jenkins\secrets\initialAdminPassword
+```
+
+If you selected another installation directory, check:
+
+``` text
+<jenkins-installation-directory>\secrets\initialAdminPassword
+```
+
+## Uninstall Jenkins
+
+### Step 1 --- Stop the Jenkins Service
+
+``` cmd
+net stop Jenkins
+```
+
+### Step 2 --- Uninstall via Control Panel
+
+Open:
+
+``` text
+Control Panel
+  → Programs
+  → Programs and Features
+```
+
+Select:
+
+``` text
+Jenkins
+```
+
+Click:
+
+``` text
+Uninstall
+```
+
+Alternatively, from an Administrator CMD:
+
+``` cmd
+wmic product where "name='Jenkins'" call uninstall
+```
+
+### Step 3 --- Remove Leftover Files
+
+If any files remain after uninstall (default install path):
+
+``` cmd
+rmdir /s /q "C:\Program Files\Jenkins"
+```
+
+> This deletes the Jenkins home directory, including jobs, build history, plugins, and configuration. Back up `JENKINS_HOME` first if needed.
+
+### Step 4 --- Verify Removal
+
+``` cmd
+sc query Jenkins
+netstat -ano | findstr ":8050"
+```
+
+------------------------------------------------------------------------
+
+# 5️⃣ Install Apache Tomcat 9
+
+### File
+
+``` text
+apache-tomcat-9.0.111.exe
+```
+
+## Step 1 --- Run Installer
+
+Right-click:
+
+``` text
+apache-tomcat-9.0.111.exe
+```
+
+Select:
+
+``` text
+Run as administrator
+```
+
+## Step 2 --- Configure Tomcat Service
+
+Enable:
+
+``` text
+Service Startup
+```
+
+Default Windows service name:
+
+``` text
+Tomcat9
+```
+
+## Step 3 --- Configure HTTP Port
+
+Tomcat default HTTP port:
+
+``` text
+8080
+```
+
+Lab port:
+
+``` text
+8053
+```
+
+During installation:
+
+``` text
+HTTP/1.1 Connector Port = 8053
+```
+
+Recommended:
+
+``` text
+HTTP Port       = 8053
+Shutdown Port   = 8005
+AJP Port        = 8009
+```
+
+> The application HTTP port is part of the `8050–8053` lab range.
+> Tomcat's shutdown/AJP ports are separate internal connector ports.
+
+## Step 4 --- Verify Tomcat Service
+
+``` cmd
+services.msc
+```
+
+Find:
+
+``` text
+Apache Tomcat 9.0 Tomcat9
+```
+
+Set:
+
+``` text
+Startup type = Automatic
+```
+
+## Step 5 --- Verify Port
+
+``` cmd
+netstat -ano | findstr ":8053"
+```
+
+Open:
+
+``` text
+http://localhost:8053
+```
+
+## Uninstall Apache Tomcat 9
+
+### Step 1 --- Stop the Tomcat Service
+
+``` cmd
+net stop Tomcat9
+```
+
+### Step 2 --- Run the Uninstaller
+
+Tomcat's Windows installer creates an uninstaller alongside the installation. From the Tomcat installation directory:
+
+``` cmd
+Uninstall.exe
+```
+
+Or via Control Panel:
+
+``` text
+Control Panel
+  → Programs
+  → Programs and Features
+  → Apache Tomcat 9.0 Tomcat9
+  → Uninstall
+```
+
+### Step 3 --- Remove the Windows Service (if it remains)
+
+``` cmd
+sc delete Tomcat9
+```
+
+### Step 4 --- Delete Leftover Files
+
+``` cmd
+rmdir /s /q C:\DevOps\Tomcat
+```
+
+> This deletes deployed applications under `webapps`, along with logs and configuration. Back up anything needed before deleting.
+
+### Step 5 --- Verify Removal
+
+``` cmd
+sc query Tomcat9
+netstat -ano | findstr ":8053"
+```
+
+------------------------------------------------------------------------
+
+# 6️⃣ Install Trivy
 
 ### Purpose
 
@@ -512,649 +1157,6 @@ trivy --version
 
 ```text
 'trivy' is not recognized as an internal or external command
-```
-
-# 3️⃣ Install Nexus Repository
-
-### File
-
-``` text
-nexus-3.85.0-03-win-x86_64.zip
-```
-
-## Step 1 --- Extract
-
-Extract to:
-
-``` text
-C:\DevOps\Nexus
-```
-
-Expected:
-
-``` text
-C:\DevOps\Nexus\
-└── nexus-3.85.0-03\
-```
-
-Nexus will use a `sonatype-work` data directory.
-
-## Step 2 --- Install Windows Service
-
-Open **Administrator CMD**:
-
-``` cmd
-cd C:\DevOps\Nexus\nexus-3.85.0-03\bin
-```
-
-Run:
-
-``` cmd
-install-nexus-service.bat
-```
-
-This installs:
-
-``` text
-SonatypeNexusRepository
-```
-
-## Step 3 --- Start Nexus
-
-``` cmd
-nexus.exe start SonatypeNexusRepository
-```
-
-Or open:
-
-``` cmd
-services.msc
-```
-
-Find:
-
-``` text
-Sonatype Nexus Repository
-```
-
-Set:
-
-``` text
-Startup type = Automatic
-```
-
-## Step 4 --- Configure Nexus Port
-
-Nexus default HTTP port:
-
-``` text
-8081
-```
-
-Lab port:
-
-``` text
-8051
-```
-
-Open:
-
-``` text
-C:\DevOps\Nexus\sonatype-work\nexus3\etc\nexus.properties
-```
-
-Set:
-
-``` properties
-application-port=8051
-```
-
-If the property does not exist, add it.
-
-Restart:
-
-``` cmd
-nexus.exe stop SonatypeNexusRepository
-nexus.exe start SonatypeNexusRepository
-```
-
-Verify:
-
-``` cmd
-netstat -ano | findstr ":8051"
-```
-
-Open:
-
-``` text
-http://localhost:8051
-```
-
-## Step 5 --- Get Initial Admin Password
-
-Nexus stores the initial password here:
-
-``` text
-sonatype-work\nexus3\admin.password
-```
-
-Example:
-
-``` cmd
-type C:\DevOps\Nexus\sonatype-work\nexus3\admin.password
-```
-
-Login:
-
-``` text
-Username: admin
-Password: <value from admin.password>
-```
-
-Change the password during initial setup.
-
-## Uninstall Nexus Repository
-
-### Step 1 --- Stop Nexus
-
-``` cmd
-nexus.exe stop SonatypeNexusRepository
-```
-
-### Step 2 --- Uninstall Windows Service
-
-Open **Administrator CMD**:
-
-``` cmd
-cd C:\DevOps\Nexus\nexus-3.85.0-03\bin
-```
-
-Run:
-
-``` cmd
-uninstall-nexus-service.bat
-```
-
-This removes the `SonatypeNexusRepository` service. Confirm it is gone:
-
-``` cmd
-sc query SonatypeNexusRepository
-```
-
-### Step 3 --- Delete Nexus Files
-
-``` cmd
-rmdir /s /q C:\DevOps\Nexus
-```
-
-> This also deletes the `sonatype-work` data directory, including repositories, blob stores, and configuration. Back up anything needed before deleting.
-
-Verify removal:
-
-``` cmd
-netstat -ano | findstr ":8051"
-```
-
-------------------------------------------------------------------------
-
-# 4️⃣ Install SonarQube
-
-### File
-
-``` text
-sonarqube-25.11.0.114957.zip
-```
-
-## Step 1 --- Extract
-
-Extract to:
-
-``` text
-C:\DevOps\SonarQube
-```
-
-Expected:
-
-``` text
-C:\DevOps\SonarQube\
-└── sonarqube-25.11.0.114957\
-```
-
-## Step 2 --- Configure SonarQube Port
-
-SonarQube default web port:
-
-``` text
-9000
-```
-
-Lab port:
-
-``` text
-8052
-```
-
-Open:
-
-``` text
-C:\DevOps\SonarQube\sonarqube-25.11.0.114957\conf\sonar.properties
-```
-
-Add or uncomment:
-
-``` properties
-sonar.web.port=8052
-```
-
-Save the file.
-
-## Step 3 --- Install Windows Service
-
-Open **Administrator CMD**:
-
-``` cmd
-cd C:\DevOps\SonarQube\sonarqube-25.11.0.114957\bin\windows-x86-64
-```
-
-Install:
-
-``` cmd
-SonarService.bat install
-```
-
-## Step 4 --- Start SonarQube
-
-``` cmd
-SonarService.bat start
-```
-
-Check status:
-
-``` cmd
-SonarService.bat status
-```
-
-Or:
-
-``` text
-services.msc
-```
-
-Find:
-
-``` text
-SonarQube
-```
-
-Set:
-
-``` text
-Startup type = Automatic
-```
-
-## Step 5 --- Verify
-
-``` cmd
-netstat -ano | findstr ":8052"
-```
-
-Open:
-
-``` text
-http://localhost:8052
-```
-
-### SonarQube Logs
-
-``` text
-C:\DevOps\SonarQube\sonarqube-25.11.0.114957\logs\
-```
-
-Important:
-
-``` text
-sonar.log
-web.log
-ce.log
-es.log
-```
-
-## Uninstall SonarQube
-
-### Step 1 --- Stop SonarQube
-
-``` cmd
-cd C:\DevOps\SonarQube\sonarqube-25.11.0.114957\bin\windows-x86-64
-SonarService.bat stop
-```
-
-### Step 2 --- Uninstall Windows Service
-
-``` cmd
-SonarService.bat uninstall
-```
-
-Confirm the service is gone:
-
-``` cmd
-sc query SonarQube
-```
-
-### Step 3 --- Delete SonarQube Files
-
-``` cmd
-rmdir /s /q C:\DevOps\SonarQube
-```
-
-> This deletes the SonarQube data directory, including the embedded database, plugins, and logs. Back up anything needed before deleting.
-
-Verify removal:
-
-``` cmd
-netstat -ano | findstr ":8052"
-```
-
-------------------------------------------------------------------------
-
-# 5️⃣ Install Jenkins
-
-### File
-
-``` text
-jenkins.msi
-```
-
-## Step 1 --- Run MSI
-
-Right-click:
-
-``` text
-jenkins.msi
-```
-
-Select:
-
-``` text
-Run as administrator
-```
-
-The Jenkins Windows MSI installs Jenkins as a Windows service.
-
-## Step 2 --- Select Java
-
-When prompted for Java, select your supported JDK.
-
-Example:
-
-``` text
-C:\Program Files\Java\jdk-21
-```
-
-## Step 3 --- Configure Jenkins Port
-
-Jenkins default HTTP port:
-
-``` text
-8080
-```
-
-Lab port:
-
-``` text
-8050
-```
-
-During the MSI installation, set:
-
-``` text
-Port = 8050
-```
-
-The installer validates that the selected port is available.
-
-## Step 4 --- Verify Jenkins Service
-
-Open:
-
-``` cmd
-services.msc
-```
-
-Find:
-
-``` text
-Jenkins
-```
-
-Set:
-
-``` text
-Startup type = Automatic
-```
-
-## Step 5 --- Verify Port
-
-``` cmd
-netstat -ano | findstr ":8050"
-```
-
-Open:
-
-``` text
-http://localhost:8050
-```
-
-## Step 6 --- Get Initial Admin Password
-
-For the default Jenkins installation location, check:
-
-``` text
-C:\Program Files\Jenkins\secrets\initialAdminPassword
-```
-
-If you selected another installation directory, check:
-
-``` text
-<jenkins-installation-directory>\secrets\initialAdminPassword
-```
-
-## Uninstall Jenkins
-
-### Step 1 --- Stop the Jenkins Service
-
-``` cmd
-net stop Jenkins
-```
-
-### Step 2 --- Uninstall via Control Panel
-
-Open:
-
-``` text
-Control Panel
-  → Programs
-  → Programs and Features
-```
-
-Select:
-
-``` text
-Jenkins
-```
-
-Click:
-
-``` text
-Uninstall
-```
-
-Alternatively, from an Administrator CMD:
-
-``` cmd
-wmic product where "name='Jenkins'" call uninstall
-```
-
-### Step 3 --- Remove Leftover Files
-
-If any files remain after uninstall (default install path):
-
-``` cmd
-rmdir /s /q "C:\Program Files\Jenkins"
-```
-
-> This deletes the Jenkins home directory, including jobs, build history, plugins, and configuration. Back up `JENKINS_HOME` first if needed.
-
-### Step 4 --- Verify Removal
-
-``` cmd
-sc query Jenkins
-netstat -ano | findstr ":8050"
-```
-
-------------------------------------------------------------------------
-
-# 6️⃣ Install Apache Tomcat 9
-
-### File
-
-``` text
-apache-tomcat-9.0.111.exe
-```
-
-## Step 1 --- Run Installer
-
-Right-click:
-
-``` text
-apache-tomcat-9.0.111.exe
-```
-
-Select:
-
-``` text
-Run as administrator
-```
-
-## Step 2 --- Configure Tomcat Service
-
-Enable:
-
-``` text
-Service Startup
-```
-
-Default Windows service name:
-
-``` text
-Tomcat9
-```
-
-## Step 3 --- Configure HTTP Port
-
-Tomcat default HTTP port:
-
-``` text
-8080
-```
-
-Lab port:
-
-``` text
-8053
-```
-
-During installation:
-
-``` text
-HTTP/1.1 Connector Port = 8053
-```
-
-Recommended:
-
-``` text
-HTTP Port       = 8053
-Shutdown Port   = 8005
-AJP Port        = 8009
-```
-
-> The application HTTP port is part of the `8050–8053` lab range.
-> Tomcat's shutdown/AJP ports are separate internal connector ports.
-
-## Step 4 --- Verify Tomcat Service
-
-``` cmd
-services.msc
-```
-
-Find:
-
-``` text
-Apache Tomcat 9.0 Tomcat9
-```
-
-Set:
-
-``` text
-Startup type = Automatic
-```
-
-## Step 5 --- Verify Port
-
-``` cmd
-netstat -ano | findstr ":8053"
-```
-
-Open:
-
-``` text
-http://localhost:8053
-```
-
-## Uninstall Apache Tomcat 9
-
-### Step 1 --- Stop the Tomcat Service
-
-``` cmd
-net stop Tomcat9
-```
-
-### Step 2 --- Run the Uninstaller
-
-Tomcat's Windows installer creates an uninstaller alongside the installation. From the Tomcat installation directory:
-
-``` cmd
-Uninstall.exe
-```
-
-Or via Control Panel:
-
-``` text
-Control Panel
-  → Programs
-  → Programs and Features
-  → Apache Tomcat 9.0 Tomcat9
-  → Uninstall
-```
-
-### Step 3 --- Remove the Windows Service (if it remains)
-
-``` cmd
-sc delete Tomcat9
-```
-
-### Step 4 --- Delete Leftover Files
-
-``` cmd
-rmdir /s /q C:\DevOps\Tomcat
-```
-
-> This deletes deployed applications under `webapps`, along with logs and configuration. Back up anything needed before deleting.
-
-### Step 5 --- Verify Removal
-
-``` cmd
-sc query Tomcat9
-netstat -ano | findstr ":8053"
 ```
 
 ------------------------------------------------------------------------
@@ -1448,16 +1450,6 @@ Jenkins :8050
 - [ ] Verify `java -version`
 - [ ] Verify `javac -version`
 
-## 🔵 Jenkins
-
-- [ ] Run `jenkins.msi`
-- [ ] Select supported JDK
-- [ ] Configure port `8050`
-- [ ] Install Jenkins service
-- [ ] Set startup type to Automatic
-- [ ] Verify `http://localhost:8050`
-- [ ] Complete initial setup
-
 ## 🟠 Nexus
 
 - [ ] Extract Nexus ZIP
@@ -1478,6 +1470,25 @@ Jenkins :8050
 - [ ] Set startup type to Automatic
 - [ ] Verify `http://localhost:8052`
 
+## 🔵 Jenkins
+
+- [ ] Run `jenkins.msi`
+- [ ] Select supported JDK
+- [ ] Configure port `8050`
+- [ ] Install Jenkins service
+- [ ] Set startup type to Automatic
+- [ ] Verify `http://localhost:8050`
+- [ ] Complete initial setup
+
+## 🐱 Tomcat
+
+- [ ] Run Tomcat installer
+- [ ] Enable Windows service
+- [ ] Configure HTTP port `8053`
+- [ ] Start `Tomcat9`
+- [ ] Set startup type to Automatic
+- [ ] Verify `http://localhost:8053`
+
 ## 🛡️ Trivy
 
 - [ ] Download the Windows 64-bit Trivy ZIP
@@ -1491,15 +1502,6 @@ Jenkins :8050
 - [ ] Integrate Trivy into Jenkins
 - [ ] Generate JSON/SARIF/HTML reports if required
 - [ ] **Do not configure a web port — Trivy is a CLI tool**
-
-## 🐱 Tomcat
-
-- [ ] Run Tomcat installer
-- [ ] Enable Windows service
-- [ ] Configure HTTP port `8053`
-- [ ] Start `Tomcat9`
-- [ ] Set startup type to Automatic
-- [ ] Verify `http://localhost:8053`
 
 # 🎉 Final Environment
 
