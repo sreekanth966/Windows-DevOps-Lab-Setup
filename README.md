@@ -350,7 +350,7 @@ SonatypeNexusRepository
 ## Step 3 --- Start Nexus
 
 ``` cmd
-nexus.exe start SonatypeNexusRepository
+nexus.exe //ES//SonatypeNexusRepository
 ```
 
 Or open:
@@ -402,8 +402,8 @@ If the property does not exist, add it.
 Restart:
 
 ``` cmd
-nexus.exe stop SonatypeNexusRepository
-nexus.exe start SonatypeNexusRepository
+nexus.exe //SS//SonatypeNexusRepository
+nexus.exe //ES//SonatypeNexusRepository
 ```
 
 Verify:
@@ -443,10 +443,12 @@ Change the password during initial setup.
 
 ## Uninstall Nexus Repository
 
+> The Nexus `bin` folder only ships `install-nexus-service.bat` — there is no separate `uninstall-nexus-service.bat`. Uninstalling the service is done directly with `nexus.exe`.
+
 ### Step 1 --- Stop Nexus
 
 ``` cmd
-nexus.exe stop SonatypeNexusRepository
+nexus.exe //SS//SonatypeNexusRepository
 ```
 
 ### Step 2 --- Uninstall Windows Service
@@ -460,7 +462,7 @@ cd C:\DevOps\Nexus\nexus-3.85.0-03\bin
 Run:
 
 ``` cmd
-uninstall-nexus-service.bat
+nexus.exe //DS//SonatypeNexusRepository
 ```
 
 This removes the `SonatypeNexusRepository` service. Confirm it is gone:
@@ -1237,8 +1239,8 @@ net start Jenkins
 ## Nexus
 
 ``` cmd
-nexus.exe stop SonatypeNexusRepository
-nexus.exe start SonatypeNexusRepository
+nexus.exe //SS//SonatypeNexusRepository
+nexus.exe //ES//SonatypeNexusRepository
 ```
 
 ## SonarQube
